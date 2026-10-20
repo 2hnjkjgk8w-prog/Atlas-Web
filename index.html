@@ -1,0 +1,432 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101827">
+  <title>Atlas Web | Collecteur Internet</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b1120;
+      --panel: #131d30;
+      --line: #29364d;
+      --text: #edf3ff;
+      --muted: #9eacc2;
+      --accent: #80e0c0;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(160deg, #101b30, #090e19 65%);
+      color: var(--text);
+      font: 16px/1.5 system-ui, sans-serif;
+      min-height: 100vh;
+    }
+
+    header, main {
+      width: min(1100px, 100%);
+      margin: auto;
+      padding: 22px 18px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      margin: 0;
+      letter-spacing: -1.5px;
+    }
+
+    header p {
+      color: var(--muted);
+      max-width: 700px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 12px 0 20px;
+    }
+
+    .stat, .toolbar, .article, .notice {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 15px;
+    }
+
+    .stat {
+      padding: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.4rem;
+    }
+
+    .stat span, .muted {
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    .toolbar {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr 190px;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    input, select, button {
+      font: inherit;
+      color: var(--text);
+      background: #0b1322;
+      border: 1px solid #34445e;
+      border-radius: 10px;
+      padding: 11px;
+      min-width: 0;
+    }
+
+    input:focus, select:focus, button:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button.active {
+      background: var(--accent);
+      color: #082016;
+      font-weight: bold;
+    }
+
+    #results {
+      display: grid;
+      gap: 12px;
+    }
+
+    .article {
+      padding: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .article h2 {
+      font-size: 1.1rem;
+      line-height: 1.4;
+      margin: 10px 0;
+    }
+
+    .article h2 a {
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .article h2 a:hover {
+      color: var(--accent);
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .tag {
+      border: 1px solid #34445e;
+      border-radius: 30px;
+      padding: 2px 8px;
+    }
+
+    .summary {
+      color: #c4cee0;
+    }
+
+    .empty {
+      padding: 25px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 15px;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: .82rem;
+      margin-top: 25px;
+    }
+
+    @media (max-width: 560px) {
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stat:last-child {
+        grid-column: span 2;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .article {
+        padding: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🌐 Atlas Web</h1>
+    <p>
+      Ton collecteur multi-sites : découvre, rassemble et consulte
+      des informations provenant de sources Internet accessibles.
+    </p>
+  </header>
+
+  <main>
+    <section class="stats">
+      <div class="stat">
+        <strong id="count">0</strong>
+        <span>Informations collectées</span>
+      </div>
+
+      <div class="stat">
+        <strong id="sources">0</strong>
+        <span>Sources enregistrées</span>
+      </div>
+
+      <div class="stat">
+        <strong id="updated">—</strong>
+        <span>Dernière collecte</span>
+      </div>
+    </section>
+
+    <section class="toolbar">
+      <input
+        id="search"
+        type="search"
+        placeholder="Rechercher une information..."
+        aria-label="Rechercher"
+      >
+
+      <select id="sort" aria-label="Trier les résultats">
+        <option value="new">Plus récents</option>
+        <option value="old">Plus anciens</option>
+        <option value="site">Par source</option>
+      </select>
+    </section>
+
+    <div class="filters" id="filters">
+      <button class="active" data-filter="all">Tout</button>
+      <button data-filter="rss">Flux RSS</button>
+      <button data-filter="web">Pages Web</button>
+    </div>
+
+    <div id="status" class="notice" role="status" style="padding:12px;margin-bottom:14px">
+      Chargement des données...
+    </div>
+
+    <section id="results" aria-live="polite">
+      <div class="empty">Chargement...</div>
+    </section>
+
+    <p class="footer">
+      Atlas Web conserve les liens et des extraits des sources originales.
+      Les données sont actualisées par le collecteur automatisé.
+      Certains sites peuvent être inaccessibles ou interdire l'extraction.
+    </p>
+  </main>
+
+  <script>
+    const $ = selector => document.querySelector(selector);
+
+    let articles = [];
+    let sources = [];
+    let activeFilter = "all";
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    function formatDate(value) {
+      if (!value) return "Date inconnue";
+
+      const date = new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return "Date inconnue";
+      }
+
+      return date.toLocaleString("fr-FR", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      });
+    }
+
+    async function loadJSON(path) {
+      const response = await fetch(
+        path + "?v=" + Date.now(),
+        { cache: "no-store" }
+      );
+
+      if (!response.ok) {
+        throw new Error("Impossible de charger " + path);
+      }
+
+      return response.json();
+    }
+
+    function renderArticles() {
+      const query = $("#search").value.trim().toLowerCase();
+      const sort = $("#sort").value;
+
+      let filtered = articles.filter(article => {
+        const searchable = [
+          article.title,
+          article.summary,
+          article.source,
+          article.url
+        ].join(" ").toLowerCase();
+
+        const matchesSearch =
+          !query || searchable.includes(query);
+
+        const matchesType =
+          activeFilter === "all" ||
+          article.kind === activeFilter;
+
+        return matchesSearch && matchesType;
+      });
+
+      filtered.sort((a, b) => {
+        if (sort === "site") {
+          return String(a.source || "")
+            .localeCompare(String(b.source || ""));
+        }
+
+        const dateA = Date.parse(a.date || a.collected_at || "") || 0;
+        const dateB = Date.parse(b.date || b.collected_at || "") || 0;
+
+        return sort === "old" ? dateA - dateB : dateB - dateA;
+      });
+
+      if (!filtered.length) {
+        $("#results").innerHTML =
+          '<div class="empty">Aucun résultat trouvé.</div>';
+        return;
+      }
+
+      $("#results").innerHTML = filtered.map(article => {
+        const type = article.kind === "rss" ? "Flux RSS" : "Page Web";
+
+        return `
+          <article class="article">
+            <div class="meta">
+              <span class="tag">${escapeHTML(type)}</span>
+              <span>${escapeHTML(article.source || "Source inconnue")}</span>
+              <span>${escapeHTML(formatDate(article.date))}</span>
+            </div>
+
+            <h2>
+              <a
+                href="${escapeHTML(article.url)}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >${escapeHTML(article.title || "Sans titre")}</a>
+            </h2>
+
+            <p class="summary">
+              ${escapeHTML(article.summary || "Aucun résumé disponible.")}
+            </p>
+          </article>
+        `;
+      }).join("");
+    }
+
+    async function initialize() {
+      try {
+        const [articleData, sourceData] = await Promise.all([
+          loadJSON("./data/articles.json"),
+          loadJSON("./data/sources.json")
+        ]);
+
+        articles = Array.isArray(articleData.items)
+          ? articleData.items
+          : [];
+
+        sources = Array.isArray(sourceData.sources)
+          ? sourceData.sources
+          : [];
+
+        $("#count").textContent =
+          articles.length.toLocaleString("fr-FR");
+
+        $("#sources").textContent =
+          sources.length.toLocaleString("fr-FR");
+
+        $("#updated").textContent =
+          articleData.updated_at
+            ? formatDate(articleData.updated_at)
+            : "Pas encore";
+
+        $("#status").textContent =
+          "Données chargées. Le collecteur actualise les fichiers automatiquement.";
+
+        renderArticles();
+
+      } catch (error) {
+        console.error(error);
+
+        $("#status").textContent =
+          "Les données sont indisponibles. Vérifie les fichiers JSON et GitHub Pages.";
+
+        $("#results").innerHTML =
+          '<div class="empty">Impossible de charger les résultats. ' +
+          'Les fichiers de données seront ajoutés dans les prochaines étapes.</div>';
+      }
+    }
+
+    $("#search").addEventListener("input", renderArticles);
+    $("#sort").addEventListener("change", renderArticles);
+
+    $("#filters").addEventListener("click", event => {
+      const button = event.target.closest("button[data-filter]");
+      if (!button) return;
+
+      activeFilter = button.dataset.filter;
+
+      $("#filters").querySelectorAll("button").forEach(item => {
+        item.classList.toggle("active", item === button);
+      });
+
+      renderArticles();
+    });
+
+    initialize();
+  </script>
+</body>
+</html>
