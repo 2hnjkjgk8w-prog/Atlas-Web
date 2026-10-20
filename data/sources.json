@@ -1,0 +1,31 @@
+
+{
+  "description": "Catalogue des sources d'Atlas Web",
+  "settings": {
+    "max_pages_per_source": 20,
+    "max_discovered_sources": 100,
+    "max_items": 1500,
+    "request_timeout_seconds": 15,
+    "crawl_same_domain_only": true
+  },
+  "sources": [
+    {
+      "name": "BBC News Monde",
+      "url": "https://feeds.bbci.co.uk/news/world/rss.xml",
+      "type": "rss",
+      "enabled": true
+    },
+    {
+      "name": "NASA Actualités",
+      "url": "https://www.nasa.gov/news-release/feed/",
+      "type": "rss",
+      "enabled": true
+    },
+    {
+      "name": "Wikimedia Diff",
+      "url": "https://diff.wikimedia.org/feed/",
+      "type": "rss",
+      "enabled": true
+    }
+  ]
+}
